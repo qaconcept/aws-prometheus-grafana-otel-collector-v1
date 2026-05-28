@@ -170,26 +170,20 @@ Expected Result: The multi-tiered trace context hierarchy renders across spans. 
 🏛️ AWS Well-Architected Framework Alignment
 1. Security & Blast Radius Isolation
 Network Containment: All underlying telemetry storage arrays (Prometheus/Jaeger engines) are locked down inside private network namespaces. They are entirely inaccessible from outside the VPC.
-
 Security Group Micro-Segmentation: Ingress into the OpenTelemetry Collector is strictly restricted to incoming applications on explicit container ports (4317 gRPC / 4318 HTTP).
-
 Least-Privilege Roles: Separate IAM Execution Roles (for ECS agent log creation and ECR image pulls) and IAM Task Roles (granting the container runtime only the permissions it needs to execute) are utilized.
 
 2. Reliability & Fault Tolerance
 High Availability Topology: ECS Fargate tasks are automatically distributed across multiple Availability Zones (us-east-1a and us-east-1b) to absorb localized infrastructure failures.
-
 Self-Healing Container Runtimes: Implements native AOT pre-compiled healthcheck binaries inside the collector spec (["CMD", "/healthcheck"]), enforcing strict evaluation intervals. The Fargate scheduler automatically assassinates and replaces unhealthy tasks within seconds.
-
 Aggressive Service Discovery: Cloud Map DNS discovery TTLs are restricted to 10 seconds, forcing rapid client-side cache clearing and continuous back-end re-routing during scaling operations or node failure events.
 
 3. Cost Optimization (The FinOps Advantage)
 Pragmatic Sandbox Engineering: To eliminate the continuous, high baseline hourly costs associated with dedicated AWS NAT Gateways in a personal test/demonstration sandbox, backend layers are provisioned within public-facing subnets utilizing strict Security Group firewalls.
-
 Network-Level Security Enforcement: Security groups are configured with zero public ingress for the collector and storage platforms, providing the absolute minimum cloud financial footprint while maintaining enterprise-standard transport isolation.
 
 4. Operational Excellence
 Decoupled Sliced IaC: Moving away from a brittle, monolithic main.tf, this platform separates concerns into 11 independent state layers. Changes to visualization panels cannot cause destructive regressions to the baseline network configurations.
-
 Immutable Configuration Control: Container references rely on explicit cryptographic or semantic image tags (v0.40.0) instead of mutable tags like latest, ensuring completely deterministic, repeatable builds.
 
 5. Performance Efficiency
