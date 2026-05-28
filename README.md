@@ -48,6 +48,7 @@ From your local workspace terminal, move to your central state configuration fol
 ```bash
 cd terraform/layers
 cp ../central.tfvars.example ../central.tfvars
+
 Configure your terraform/central.tfvars file. The repository comes pre-packaged with safe, production-mode default allocations:
 
 Terraform
@@ -59,6 +60,7 @@ vpc_cidr            = "10.0.0.0/16"
 availability_zones  = ["us-east-1a", "us-east-1b"]
 domain_name         = "sreconcepts.com"
 create_ssl_cert     = false
+
 Option A: Fully Automated Deployment (Recommended)
 To execute an automated, orchestrated cold-build of all 11 infrastructure layers in their correct dependency sequence, execute the root bootstrap script from the repository base:
 
@@ -86,8 +88,9 @@ cd ../08-obs-jaeger && terraform init && terraform apply -var-file=$VAR_FILE -au
 cd ../09-prometheus && terraform init && terraform apply -var-file=$VAR_FILE -auto-approve
 cd ../10-grafana && terraform init && terraform apply -var-file=$VAR_FILE -auto-approve
 cd ../11-test-app && terraform init && terraform apply -var-file=$VAR_FILE -auto-approve
+
 📈 Initial Setup of Grafana Data Sources & Dashboards
-Once your 11 layers are live, access Grafana via your public ALB endpoint (e.g., http://<ALB-DNS-NAME>/grafana or http://grafana.sreconcepts.com). Log in with your provisioned administrator credentials to onboard your telemetry storage engines.
+Once your 11 layers are live, access Grafana via your public ALB endpoint (e.g., http://<ALB-DNS-NAME>/grafana or http://grafana.sreconcepts.com). Log in with your provisioned administrator credentials (admin/admin) to onboard your telemetry storage engines.
 
 1. Register Data Sources
 Data Source A: Prometheus
@@ -115,37 +118,27 @@ Create a new dashboard and construct these 5 vital structural metrics panels. Th
 
 Panel 1: Collector Instance Status
 Visualization: Stat Panel
-
 PromQL Query: up{job="otel-collector"}
-
 Configuration: Set Thresholds to 1 = Green (Online), 0 = Red (Offline).
 
 Panel 2: Collector Process Uptime
 Visualization: Stat Panel
-
 PromQL Query: otelcol_process_uptime
-
 Configuration: In Standard Options, change the color scheme from From thresholds (by value) to Single color and select Green. This locks the status to a stable green line as uptime values scale.
 
 Panel 3: Inbound Span Throughput
 Visualization: Time Series Line Chart
-
 PromQL Query: sum(rate(otelcol_receiver_accepted_spans[1m])) by (receiver)
-
 Operational Expectation: Displays the live ingestion curve of your active Python applications (typically averaging 3.5 to 4 ops/s).
 
 Panel 4: Processor Refused Spans (Saturation Guard)
 Visualization: Time Series Line Chart
-
 PromQL Query: sum(rate(otelcol_receiver_refused_spans[1m])) by (processor) or vector(0)
-
 Operational Expectation: Flatline at 0. The appended or vector(0) operator ensures that if lazy initialization prevents the metric from creating during healthy phases, it safely outputs a functional zero rather than failing with an empty "No Data" panel state.
 
 Panel 5: Exporter Send Failures (Egress Reliability)
 Visualization: Time Series Line Chart
-
 PromQL Query: otelcol_exporter_send_failed_spans or vector(0)
-
 Operational Expectation: Flatline at 0. Confirms network and interface stability to downstream targets.
 
 🔬 SRE Validation Matrix (How To Test)
@@ -157,29 +150,21 @@ Attempt to curl Prometheus or Jaeger query endpoints directly from your local ne
 Bash
 curl -m 5 [http://10.0.](http://10.0.)X.X:9090
 Expected Result: Connection timeout. This confirms that your security groups and private subnet matrices are strictly containing your storage systems.
-
 Hit the public-facing ALB on an unmapped custom endpoint route.
-
 Expected Result: 404 Not Found or a standard default gateway deny page. This confirms that path-based validation is tightly enforced at your proxy routing layer.
 
 Phase 2: Reliability & Fault-Tolerance (Task Assassination Chaos)
 Verify via the AWS Console that your running ECS Fargate tasks are distributed uniformly across your availability zones (us-east-1a and us-east-1b).
-
 Simulate an ungraceful hardware degradation event by terminating your active otel-collector-service task container via the AWS CLI or ECS dashboard:
-
 Bash
 aws ecs stop-task --cluster <YOUR_CLUSTER_NAME> --task <TASK_ID>
 Observe Self-Healing Performance: * Watch the ALB Target Groups instantly catch the drop and transition the target state to unhealthy.
-
 Track the Fargate infrastructure engine automatically trigger a fresh cold-start instance replacement container.
-
 Verify that Grafana metrics smoothly resume streaming within seconds as the new instance automatically registers itself to the active Cloud Map internal DNS address.
 
 Phase 3: Operational Excellence & Context Propagation
 Access your 11-test-app runtime container logs via Amazon CloudWatch Logs and harvest a live, generated trace_id string.
-
 Copy that exact ID payload, log into your Jaeger UI control dashboard (http://<ALB-DNS-NAME>/jaeger), and execute an explicit ID lookup search query.
-
 Expected Result: The multi-tiered trace context hierarchy renders across spans. This cleanly proves that your application instrumentation layer, upstream gRPC collector transport networks, and backend Jaeger storage blocks are tracking and executing context propagation perfectly.
 
 🏛️ AWS Well-Architected Framework Alignment
