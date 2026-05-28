@@ -33,7 +33,7 @@ resource "aws_lb_target_group" "jaeger_grpc" {
   target_type      = "ip"
   protocol_version = "GRPC" # Handles multiplexed binary frames natively
 
-  # FIXED HEALTH CHECK: Probe the native gRPC receiver directly
+  # Probe the native gRPC receiver directly
   health_check {
     protocol            = "HTTP"
     port                = "4317"                            # Target the actual gRPC port
@@ -58,7 +58,7 @@ resource "aws_lb_target_group" "jaeger_ui" {
   vpc_id           = var.vpc_id
   target_type      = "ip"
 
-  # FIXED HEALTH CHECK: Probe the Admin interface on Port 14269 using standard HTTP/1.1
+  # Probe the Admin interface on Port 14269 using standard HTTP/1.1
   health_check {
     protocol            = "HTTP"
     port                = "14269" # Standard HTTP probe against the Admin interface

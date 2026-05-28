@@ -33,11 +33,11 @@ resource "aws_ecs_task_definition" "jaeger" {
       { containerPort = 4317, hostPort = 4317, protocol = "tcp" },   # OTLP gRPC Receiver
       { containerPort = 4318, hostPort = 4318, protocol = "tcp" },    # OTLP HTTP Receiver
 
-      # ADD THIS LINE TO EXPOSE THE HEALTH CHECK PORT TO THE ALB:
+      # EXPOSE THE HEALTH CHECK PORT TO THE ALB:
       { containerPort = 14269, hostPort = 14269, protocol = "tcp" }  # Admin/Health Port
     ]
 
-    # ADD THIS NATIVE HEALTHCHECK TO TURN THE ECS COLUMN GREEN:
+    # NATIVE HEALTHCHECK FOR THE CONTAINER:
     healthCheck = {
       command     = ["CMD-SHELL", "wget --spider -q http://localhost:14269/ || exit 1"]
       interval    = 15

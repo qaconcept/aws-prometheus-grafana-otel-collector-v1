@@ -48,7 +48,7 @@ resource "aws_ecs_task_definition" "grafana" {
       { containerPort = 3000, hostPort = 3000, protocol = "tcp" } 
     ]
     
-    # NATIVE ECS HEALTHCHECK (Turns the ECS Console Column Green)
+    # NATIVE ECS HEALTHCHECK
     healthCheck = {
       command     = ["CMD-SHELL", "wget --spider -q http://localhost:3000/api/health || exit 1"]
       interval    = 15

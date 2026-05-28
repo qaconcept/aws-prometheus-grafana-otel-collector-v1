@@ -35,7 +35,7 @@ resource "aws_ecs_task_definition" "otel" {
       { containerPort = 13133, hostPort = 13133, protocol = "tcp" } # ADDED: Internal Health Extension Port
     ]
 
-    # FIXED NATIVE HEALTHCHECK (Uses the pre-compiled binary instead of wget/shell)
+    # NATIVE HEALTHCHECK (Uses the pre-compiled binary instead of wget/shell)
     healthCheck = {
       command     = ["CMD", "/healthcheck"]
       interval    = 15
@@ -48,7 +48,6 @@ resource "aws_ecs_task_definition" "otel" {
       {
         name  = "AOT_CONFIG_CONTENT"
         value = <<EOF
-# Configuration Extensions Section
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
@@ -61,7 +60,7 @@ receivers:
       http:
         endpoint: 0.0.0.0:4318
   
-  # Add the Prometheus receiver to scrape the collector's internal endpoint
+  # Internal collector scraper
   prometheus:
     config:
       scrape_configs:
@@ -69,16 +68,20 @@ receivers:
           scrape_interval: 10s
           static_configs:
             - targets: ['0.0.0.0:8888']
+  
+  # PHASE 4 ADDITION: Free local Fargate resource scraper
+  awsecscontainermetrics:
+    collection_interval: 20s
 
 exporters:
   otlp/jaeger:
-    endpoint: "jaeger.${var.domain_name}:443"
+    endpoint: "jaeger.$${var.domain_name}:443"
     tls:
       insecure: false
   
-  # Add the Prometheus remote write exporter to push data to the Prometheus server
+  # Pushes metric telemetry upstream to your Prometheus cluster
   prometheusremotewrite:
-    endpoint: "http://prometheus.${var.project_name}.internal:9090/api/v1/write"
+    endpoint: "http://prometheus.$${var.project_name}.internal:9090/api/v1/write"
     tls:
       insecure: true
   
@@ -86,13 +89,18 @@ exporters:
     verbosity: detailed
 
 service:
-  # Register the health_check extension to run alongside core services
   extensions: [health_check]
   pipelines:
     traces:
       receivers: [otlp]
       processors: []
       exporters: [otlp/jaeger, logging]
+    
+    # FIXED & ACTIVATED: Metrics pipeline routing everything to Prometheus
+    metrics:
+      receivers: [prometheus, awsecscontainermetrics]
+      processors: []
+      exporters: [prometheusremotewrite]
 EOF
       }
     ]

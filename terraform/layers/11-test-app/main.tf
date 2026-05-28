@@ -15,7 +15,7 @@ resource "aws_ecs_task_definition" "test_app" {
 
     command = ["python", "main.py"] # Native telemetry generation runtime script
 
-    # FIXED NATIVE HEALTHCHECK (Bypasses missing utilities by checking /proc natively)
+    # NATIVE HEALTHCHECK (Bypasses missing utilities by checking /proc natively)
     healthCheck = {
       command     = ["CMD-SHELL", "[ -d /proc/1 ] || exit 1"]
       interval    = 15
