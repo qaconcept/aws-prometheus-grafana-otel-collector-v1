@@ -9,6 +9,7 @@ A production-ready, highly isolated, 11-layered Infrastructure as Code (IaC) dep
 
 This system establishes a decoupled telemetry pipeline. Applications emit OTLP (OpenTelemetry Protocol) telemetry to a centralized **OpenTelemetry Collector Contrib** cluster. The collector intelligently parses, processes, and dispatches traces upstream to **Jaeger** (via secure gRPC) and metrics to a distributed **Prometheus** server (via remote write), with **Grafana** providing unified visual intelligence and trace-to-metrics correlation.
 
+![AWS HA Observability Pipeline on AWS Fargate Architecture Diagram](images/aws-prometheus-grafana-otel-collector--5-28-2026.png)
 
 
 ### Decoupled 11-Layer Pipeline Matrix
